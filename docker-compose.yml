@@ -5,10 +5,17 @@ services:
     image: n8nio/n8n:latest
     restart: always
     ports:
-      - "127.0.0.1:5678:5678"
+      - "127.0.0.1:5678:5678"  # Bind only to localhost for security
     environment:
+      - DB_POSTGRESDB_DATABASE=n8n_io_postgresql
+      - DB_POSTGRESDB_HOST=dpg-d11d9o2dbo4c739u0eo0-a
+      - DB_POSTGRESDB_PASSWORD=wIhfkNgsY4SL7lpJKF8xO9Mr1mQP2cxl
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=n8n_io_postgresql_user
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_CONNECTION_URL=postgresql://n8n_io_postgresql_user:wIhfkNgsY4SL7lpJKF8xO9Mr1mQP2cxl@dpg-d11d9o2dbo4c739u0eo0-a.oregon-postgres.render.com/n8n_io_postgresql
+      - EXECUTIONS_DATA_SAVE_ON_ERROR=all
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=all
+      - EXECUTIONS_MODE=regular
       - GENERIC_TIMEZONE=Asia/Kolkata
       - N8N_API_TOKEN=c10eab3b61b66720d66869316ca81988
       - N8N_BASIC_AUTH_ACTIVE=true
@@ -35,6 +42,5 @@ services:
       - QUEUE_MODE=false
       - WEBHOOK_TUNNEL_URL=https://n8n.sutharsang.tech
       - WEBHOOK_URL=https://n8n.sutharsang.tech
-
     volumes:
       - ./data:/home/node/.n8n
