@@ -12,7 +12,7 @@ services:
       - DB_POSTGRESDB_PASSWORD=wIhfkNgsY4SL7lpJKF8xO9Mr1mQP2cxl
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_USER=n8n_io_postgresql_user
-      - DB_TYPE=postgresdb
+      - DB_TYPE=postgres
       - DB_SSL=true
       - DB_SSL_REJECT_UNAUTHORIZED=false
       - EXECUTIONS_DATA_SAVE_ON_ERROR=all
