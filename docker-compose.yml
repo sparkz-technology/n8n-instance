@@ -8,7 +8,7 @@ services:
       - "5678:5678"
     environment:
       - DB_POSTGRESDB_DATABASE=n8n_io_postgresql
-      - DB_POSTGRESDB_HOST=dpg-d11d9o2dbo4c739u0eo0-a
+      - DB_POSTGRESDB_HOST=dpg-d11d9o2dbo4c739u0eo0-a.oregon-postgres.render.com
       - DB_POSTGRESDB_PASSWORD=wIhfkNgsY4SL7lpJKF8xO9Mr1mQP2cxl
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_USER=n8n_io_postgresql_user
