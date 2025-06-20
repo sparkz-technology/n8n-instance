@@ -5,7 +5,7 @@ services:
     image: n8nio/n8n:latest
     restart: always
     ports:
-      - "5678:5678"
+      - "127.0.0.1:5678:5678"
     environment:
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_CONNECTION_URL=postgresql://n8n_io_postgresql_user:wIhfkNgsY4SL7lpJKF8xO9Mr1mQP2cxl@dpg-d11d9o2dbo4c739u0eo0-a.oregon-postgres.render.com/n8n_io_postgresql
