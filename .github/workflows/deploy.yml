@@ -26,7 +26,7 @@ jobs:
       - name: Deploy to VM
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
-            cd ~/n8n-instance
+            cd ~/n8n/n8n-instance
             git pull origin main
             docker-compose pull
             docker-compose up -d
