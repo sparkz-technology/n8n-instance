@@ -5,7 +5,7 @@ services:
     image: n8nio/n8n:latest
     restart: always
     ports:
-      - "127.0.0.1:5678:5678"  # Bind only to localhost for security
+      - "5678:5678"
     environment:
       - DB_POSTGRESDB_DATABASE=n8n_io_postgresql
       - DB_POSTGRESDB_HOST=dpg-d11d9o2dbo4c739u0eo0-a
