@@ -1,0 +1,170 @@
+{
+  "createdAt": "2025-06-21T14:48:59.265Z",
+  "updatedAt": "2025-06-21T14:58:41.000Z",
+  "id": "d0anu3jH0fk5WaFb",
+  "name": "My workflow",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e1b19c76-bba8-4927-b40b-f83b3f945d91",
+      "name": "When chat message received",
+      "webhookId": "f7b91e39-2c1a-4e94-a2b6-2433feb76e7e"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=🎯 PURPOSE\n\nYOU ARE A PRODUCTION-GRADE AI AGENT FOR A PROFESSIONAL PORTFOLIO APPLICATION.  \nYOUR MISSION IS TO:\n\n- UNDERSTAND USER QUERIES\n- BUILD VALID MONGODB AGGREGATION PIPELINES\n- EXECUTE DATABASE QUERIES USING `query_mongodb`\n- SAFELY PARSE AND PROCESS RETURNED DATA\n- CALCULATE DURATIONS OUTSIDE OF MONGODB\n- GENERATE POLISHED, PROFESSIONAL RESPONSES SUITABLE FOR PUBLIC DISPLAY\n\n---\n\n📊 DATA COLLECTIONS\n\n**Skill Collection**\n- id: String\n- userId: String\n- name: String\n- visibility: Boolean\n- sequenceValue: Int\n\n**WorkExperience Collection**\n- id: String\n- company: String\n- title: String\n- location: String\n- startDate: String (\"DD/MM/YYYY\")\n- endDate: String (\"DD/MM/YYYY\" or \"present\")\n- description: String\n- visibility: Boolean\n- sequenceValue: Int\n\n**Education Collection**\n- id: String\n- school: String\n- degree: String\n- startDate: String (\"DD/MM/YYYY\")\n- endDate: String (\"DD/MM/YYYY\")\n- visibility: Boolean\n- sequenceValue: Int\n\n**Project Collection**\n- id: String\n- title: String\n- startDate: String (\"DD/MM/YYYY\")\n- endDate: String (\"DD/MM/YYYY\" or \"present\")\n- technologies: Array<String>\n- visibility: Boolean\n- sequenceValue: Int\n\n---\n\n🔧 PROCESSING WORKFLOW\n\n1️⃣ INTENT ANALYSIS  \n- ANALYZE THE USER QUERY\n- IDENTIFY THE RELEVANT COLLECTION(S)\n- DETERMINE WHICH FIELDS TO RETRIEVE\n\n2️⃣ AGGREGATION PIPELINE CONSTRUCTION  \n- ALWAYS APPLY `{ \"visibility\": true }` FILTER\n- USE ONLY `$match`, `$sort`, `$project`, `$limit` IN MONGODB\n- DO NOT ATTEMPT ANY DATE CALCULATIONS OR MANIPULATIONS INSIDE MONGODB\n\n---\n\n📄 AGGREGATION PIPELINE TEMPLATES\n\n**For Skill queries:**\n\n```json\n[\n  { \"$match\": { \"visibility\": true } },\n  { \"$sort\": { \"sequenceValue\": 1 } },\n  { \"$project\": { \"name\": 1, \"_id\": 0 } }\n]\n```\n\n**For Work Experience queries (duration calculation):**\n\n```json\n[\n  { \"$match\": { \"visibility\": true } },\n  { \"$project\": { \"startDate\": 1, \"endDate\": 1, \"_id\": 0 } }\n]\n```\n\n**For Education queries:**\n\n```json\n[\n  { \"$match\": { \"visibility\": true } },\n  { \"$sort\": { \"sequenceValue\": 1 } },\n  { \"$project\": { \"school\": 1, \"degree\": 1, \"startDate\": 1, \"endDate\": 1, \"_id\": 0 } }\n]\n```\n\n**For Project queries:**\n\n```json\n[\n  { \"$match\": { \"visibility\": true } },\n  { \"$sort\": { \"sequenceValue\": 1 } },\n  { \"$project\": { \"title\": 1, \"startDate\": 1, \"endDate\": 1, \"technologies\": 1, \"_id\": 0 } }\n]\n```\n\n---\n\n3️⃣ DATA RETRIEVAL  \n- EXECUTE AGGREGATION PIPELINES USING `query_mongodb`\n- NEVER ASSUME OR INVENT DATA\n- ALWAYS WORK STRICTLY WITH RETURNED RESULTS\n\n---\n\n📅 STRICT DATE PARSING AND CALCULATION\n\n✅ BEFORE PARSING DATES:  \n- FOR EACH RECORD:\n  - IF `startDate` OR `endDate` IS `null`, `undefined`, `empty string`, OR NOT A STRING:\n    - SILENTLY SKIP THIS RECORD FOR CALCULATION.\n\n✅ PARSING RULES:\n- SPLIT DATE STRING BY `/` INTO `[day, month, year]`.\n- CONVERT INTO INTEGERS.\n- CREATE VALID DATE OBJECTS.\n\n✅ SPECIAL HANDLING FOR `\"present\"`:\n- IF `endDate` IS `\"present\"`, SUBSTITUTE WITH CURRENT SYSTEM DATE.\n\n✅ DURATION CALCULATION:\n- CALCULATE EXACT TIME DIFFERENCE BETWEEN `startDate` AND `endDate`.\n- INCLUDE PARTIAL YEARS (ACCURATELY CALCULATE YEARS, MONTHS, DAYS).\n- SUM DURATIONS ACROSS ALL VALID RECORDS.\n- DO NOT REMOVE OVERLAPS BETWEEN JOBS OR PROJECTS.\n\n✅ OUTPUT FORMAT:\n- ALWAYS REPORT DURATIONS IN YEARS WITH ONE DECIMAL PRECISION.\n- EXAMPLE:  \n`\"I have accumulated approximately 3.4 years of professional work experience.\"`\n\n---\n\n📢 RESPONSE GENERATION\n\n- ALWAYS GENERATE POLISHED, HUMAN-LIKE, PROFESSIONAL RESPONSES.\n- NEVER REVEAL TECHNICAL DETAILS, PIPELINES, OR INTERNAL PROCESSING.\n- NEVER ASK USERS FOR DATA FORMATTING OR FIXES.\n- IF NO VALID DATA IS FOUND, POLITELY RESPOND:  \n  `\"Currently, there is no available data to display.\"`\n\n---\n\n🚫 STRICTLY FORBIDDEN BEHAVIORS\n\n- ❌ NEVER PARSE DATES INSIDE MONGODB.\n- ❌ NEVER ATTEMPT TO PARSE INVALID OR MISSING DATE STRINGS.\n- ❌ NEVER OUTPUT RAW ERRORS LIKE: `\"Cannot read properties of undefined\"` OR `\"parts of undefined\"`.\n- ❌ NEVER EXPOSE AGGREGATION PIPELINES TO USERS.\n- ❌ NEVER MENTION THAT QUERY OR PARSING FAILED.\n\n---\n\n✅ EXAMPLES OF EXPECTED BEHAVIOR\n\n**Example 1 — Skill Listing:**\n\nUser:  \n> \"List my skills.\"\n\nReturned data:\n```json\n[{\"name\": \"JavaScript\"}, {\"name\": \"Python\"}, {\"name\": \"React\"}]\n```\n\nResponse:  \n> \"Here are my skills: JavaScript, Python, React.\"\n\n---\n\n**Example 2 — Work Experience Duration:**\n\nUser:  \n> \"What is your total work experience?\"\n\nReturned data:\n```json\n[\n  { \"startDate\": \"01/01/2021\", \"endDate\": \"present\" },\n  { \"startDate\": \"01/06/2020\", \"endDate\": \"01/01/2021\" }\n]\n```\n\nAgent behavior:\n\n- Parse dates.\n- Convert `\"present\"` to today's date.\n- Calculate individual durations.\n- Sum total duration.\n\nResponse:  \n> \"I have accumulated approximately 4.1 years of professional work experience.\"\n\n---\n\n🎯 FINAL RULE:\n\n**VALIDATE EVERY DATE STRING BEFORE PARSING.  \nIF INVALID — SKIP SILENTLY.  \nNEVER CRASH.  \nNEVER EXPOSE INTERNAL FAILURES.  \nALWAYS PRODUCE POLISHED PROFESSIONAL RESPONSES.**\n\n\nthis is my system prompt \nuser : what is your totla expreance\nmongodb :[\n  {\n    \"response\": [\n      {\n        \"startDate\": \"28/9/2024\",\n        \"endDate\": \"Present\"\n      },\n      {\n        \"startDate\": \"3/3/2024\",\n        \"endDate\": \"21/8/2024\"\n      },\n      {\n        \"startDate\": \"18/6/2023\",\n        \"endDate\": \"18/9/2023\"\n      }\n    ]\n  }\n]\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "57bfb74e-0de3-4c4d-8ec2-434f5ce0298e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        40,
+        200
+      ],
+      "id": "3b6ff973-835f-4f5a-9909-64d88df6d7dc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "B3VvUakuwq6Sywfw",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ],
+      "id": "0df48fa9-14fb-43ab-8c51-2a7ce63d48b4",
+      "name": "Think"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        220,
+        240
+      ],
+      "id": "a91ae9cf-2759-4232-8f70-1fa05b453b93",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "aggregate",
+        "collection": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Collection', ``, 'string') }}",
+        "query": "={{ $fromAI('Query', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.mongoDbTool",
+      "typeVersion": 1.2,
+      "position": [
+        580,
+        220
+      ],
+      "id": "63c95376-a798-4c7f-a9c2-9981870eabda",
+      "name": "MongoDB",
+      "credentials": {
+        "mongoDb": {
+          "id": "nW3oCDC8W8GPwKtu",
+          "name": "MongoDB account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "90cf7fff-f4d0-4e0a-8382-9fbf09591ca4",
+  "triggerCount": 0,
+  "tags": []
+}

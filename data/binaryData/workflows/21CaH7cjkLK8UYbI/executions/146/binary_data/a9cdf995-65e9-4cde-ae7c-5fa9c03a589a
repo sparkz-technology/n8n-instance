@@ -1,0 +1,832 @@
+{
+  "createdAt": "2025-06-20T16:45:57.830Z",
+  "updatedAt": "2025-06-21T09:12:31.000Z",
+  "id": "l2quIboueOQGV02h",
+  "name": "Social media Automation",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        360,
+        -80
+      ],
+      "id": "950fc307-92d8-4aa7-b437-2672768a6f83",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "B3VvUakuwq6Sywfw",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 10 * * *"
+            },
+            {
+              "field": "cronExpression",
+              "expression": "0 19 * * *"
+            }
+          ]
+        }
+      },
+      "id": "f2dcbc17-cc98-4825-baa9-16f8e2e535a5",
+      "name": "Trigger (Twice Daily)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.animechan.io/v1/quotes/random",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "WvezWzo+I1/Mgz/6bveDSw==t2NKqDHjYvHiOHWE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        -260
+      ],
+      "id": "f4fdcb2b-c953-4f31-b771-caa188badff2",
+      "name": "Fetch Random Anime Quote\t"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You will be given a quote or text. Your task is to:\n\nExtract a highly engaging 2-line caption suitable for social media. Make it emotionally resonant, optionally include relevant emojis, and encourage interaction when appropriate.\n\nGenerate 8–12 relevant, highly engaging and trending hashtags (all lowercase, no spaces, no punctuation), mixing broad popular keywords and niche anime-specific tags, suitable for Instagram, TikTok, and Google.\n\nCreate a detailed, vivid anime-style image prompt inspired by the quote’s essence. Focus on mood, setting, character posture, lighting, environment, and symbolism. Do not include any text, avoid logos, watermarks, or captions.\n\nGenerate a YouTube video title that is highly clickable, emotionally engaging, and optimized for anime-related viral content.\n\nReturn only a JSON object in the following format:\n\n{\n  \"caption\": \"<two-line meaningful caption>\",\n  \"hashtags\": \"#example1 #example2 #example3 ...\",\n  \"image_prompt\": \"<anime-style description for AI image generation>\",\n  \"youtube_title\": \"<clickable YouTube title>\"\n}\nHere is the text: {{ $('Fetch Random Anime Quote\t').item.json.data.content }}\n",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        320,
+        -260
+      ],
+      "id": "1d5234d6-e211-4dcf-853e-0331c630e53f",
+      "name": "Generate Caption, Hashtags & Prompt (LLM)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the 'text' field (with the code block formatting)\nconst raw = $input.first().json.text\n\n// 2. Remove the ```json and ``` wrapping if present\nconst cleaned = raw.replace(/```json|```/g, '').trim();\n\n// 3. Parse the JSON string\nconst parsed = JSON.parse(cleaned);\n\n// 4. Return the hashtags and caption\nreturn {\n  json: {\n    hashtags: parsed.hashtags,\n    caption: parsed.caption,\n    image_prompt: encodeURIComponent(parsed.image_prompt),\n    file_name:$now ,\n    youtube_title :parsed.youtube_title\n  }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        760,
+        -260
+      ],
+      "id": "13433f90-63ec-4ed3-9039-68d9ec1ba989",
+      "name": "Parse LLM JSON Output\t"
+    },
+    {
+      "parameters": {
+        "method": "=GET",
+        "url": "=https://images.weserv.nl/?url=https://image.pollinations.ai/prompt/{{ $json.image_prompt }}?model=flux&w=1080&h=1920&fit=cover",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        980,
+        -240
+      ],
+      "id": "6bc0abfe-4ea3-4ad6-a0de-70502d6693df",
+      "name": "Generate AI Image URL (Pollinations)\t"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tmpfiles.org/api/v1/upload",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1160,
+        -240
+      ],
+      "id": "1581dedb-8adf-43d5-9095-db318147ed31",
+      "name": "Upload AI Image to Tmpfiles\t"
+    },
+    {
+      "parameters": {
+        "jsCode": "const originalUrl = $input.first().json.data.url;\n\n// Replace only the domain part\nconst directDownloadUrl = originalUrl.replace(\n  'tmpfiles.org/',\n  'tmpfiles.org/dl/'\n);\n\nreturn [\n  {\n    json: {\n      original: originalUrl,\n      direct: directDownloadUrl\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        -240
+      ],
+      "id": "34a75029-c154-40b1-86ec-f93bbeb2fce6",
+      "name": "Format Tmpfiles Direct URL\t"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hcti.io/v1/image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "authorization",
+              "value": "Basic WU9VUl9VU0VSX0lEOllPVVJfQVBJX0tFWQ=="
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=html",
+              "value": "=$(cat << 'EOF' |<!DOCTYPE html>\n<html lang=\"en\">\n\n<head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\" />\n    <style>\n        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');\n\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n\n        body {\n            background-color: #000;\n            display: flex;\n            justify-content: center;\n            align-items: center;\n            height: 100vh;\n            font-family: 'Poppins', sans-serif;\n        }\n\n        .\n    </style>\n</head>\n\n<body>\n    <div class=\"quote-card\">\n    <div class=\"overlay\"></div>\n    <div class=\"content\">\n        <div class=\"quote-box\">\n            <div class=\"quote-text\">“{{ $('Fetch Random Anime Quote\t').item.json.data.content }}”</div>\n            <div class=\"quote-author\">— {{ $('Fetch Random Anime Quote\t').item.json.data.character.name }} ({{ $('Fetch Random Anime Quote\t').item.json.data.anime.name }})</div>\n        </div>\n    </div>\n    <div class=\"insta\">\n        @code.ofash\n    </div>\n</div>\n\n<style>\n@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');\n\n.quote-card {\n    width: 624px;\n    height: 1024px;\n    background: url('{{ $json.direct }}') center/cover no-repeat;\n    position: relative;\n    font-family: 'Poppins', sans-serif;\n    overflow: hidden;\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n    padding: 3rem;\n    color: #fff;\n}\n\n.overlay {\n    position: absolute;\n    inset: 0;\n    background: rgba(0, 0, 0, 0.45);\n    z-index: 0;\n}\n\n.content {\n    z-index: 1;\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n}\n\n.quote-box {\n    padding: 1.5rem;\n    border-radius: 15px;\n    max-width: 100%;\n}\n\n.quote-text {\n    font-size: 1.7rem;\n    font-weight: 600;\n    line-height: 1.6;\n    margin-bottom: 1rem;\n}\n\n.quote-author {\n    font-size: 1.2rem;\n    font-style: italic;\n    color: #ccc;\n}\n\n.insta {\n    position: absolute;\n    bottom: 1.5rem;\n    right: 2rem;\n    color: #ccc;\n    display: flex;\n    align-items: center;\n    gap: 0.4rem;\n    font-size: 0.95rem;\n    z-index: 1;\n}\n\n</style>\n\n</body>\n\n</html>\nEOF)\n"
+            },
+            {
+              "name": "width",
+              "value": "624px"
+            },
+            {
+              "name": "=height",
+              "value": "=1080px"
+            },
+            {
+              "name": "selector",
+              "value": ".quote-card"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1580,
+        -240
+      ],
+      "id": "a3baf296-d23f-4631-98df-cc14de56906b",
+      "name": "Render Final Quote Image (HTMLCSS2Image)",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Vw3L5MihiC6XUvwI",
+          "name": "Htmlcsstoimage credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.shotstack.io/v1/render",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"timeline\": {\n    \"background\": \"#000000\",\n    \"soundtrack\": {\n      \"src\": \"https://res.cloudinary.com/do9l1lmkb/video/upload/v1750161943/quiet-stars-ai_ilrohc.mp3\"\n    },\n    \"tracks\": [\n      {\n        \"clips\": [\n          {\n            \"asset\": {\n              \"type\": \"image\",\n              \"src\": \"{{ $json.url }}\"\n            },\n            \"start\": 0,\n            \"length\": 15,\n            \"fit\": \"cover\",\n            \"position\": \"center\"\n          }\n        ]\n      }\n    ]\n  },\n  \"output\": {\n    \"format\": \"mp4\",\n    \"resolution\": \"1080\",\n    \"aspectRatio\": \"9:16\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        420
+      ],
+      "id": "5a9d6160-4558-4edd-a13b-d368933d0cff",
+      "name": "Send Image to Shotstack for Video Render",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "HGR0pUlVq8ilrh2C",
+          "name": "Shotstack.io Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.shotstack.io/v1/render/{{ $json.response.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        420
+      ],
+      "id": "c3012821-f4c5-4d0a-b9e3-edb2f226231a",
+      "name": "Check Shotstack Render Status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "HGR0pUlVq8ilrh2C",
+          "name": "Shotstack.io Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b3dfbd97-5d59-4025-a091-a493dba08655",
+              "leftValue": "={{ $json.response.status }}",
+              "rightValue": "done",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        640,
+        420
+      ],
+      "id": "6db3a871-4de4-409e-8df0-de4f169892ee",
+      "name": "Check If Render Completed"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        520
+      ],
+      "id": "90daa246-e5e6-442b-8cf6-f7e54376acf9",
+      "name": "Wait Before Checking Render Status",
+      "webhookId": "c7f4cf31-2399-408a-aead-a0c00a95ba65"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.response.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "youtubeShorts"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        860,
+        180
+      ],
+      "id": "43b9068d-29e3-451c-8a72-34573b906d7d",
+      "name": "Download Rendered Video"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('Parse LLM JSON Output\t').item.json.youtube_title }}",
+        "regionCode": "IN",
+        "categoryId": "1",
+        "binaryProperty": "youtubeShorts",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        80
+      ],
+      "id": "1b680caf-5ed9-452a-9ddf-38efa198e041",
+      "name": "Upload Video to YouTube Shorts\t",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "VJvhZKnJKOmqNNIP",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "17841475437970159",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "video_url",
+                "value": "={{ $json.response.url }}"
+              },
+              {
+                "name": "caption",
+                "value": "={{ $('Parse LLM JSON Output\t').item.json.hashtags }} {{ $('Parse LLM JSON Output\t').item.json.caption }}"
+              },
+              {
+                "name": "media_type",
+                "value": "REELS"
+              }
+            ]
+          }
+        }
+      },
+      "id": "55fe1e96-94ae-43d0-86e9-570443b03b9d",
+      "name": "Create Instagram Media Container",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        2440,
+        -40
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "jolW6j9xRq2tkWgX",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "3342d0ff-3fb5-479f-966f-6a79375f937d",
+      "name": "Wait for Media Container to be Ready",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        340
+      ],
+      "webhookId": "9635621c-f848-4c65-91f1-af74275fbb91"
+    },
+    {
+      "parameters": {
+        "graphApiVersion": "v22.0",
+        "node": "={{ $json.id }}",
+        "edge": "=",
+        "options": {
+          "fields": {
+            "field": [
+              {
+                "name": "status_code"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        2080,
+        620
+      ],
+      "id": "8c869b82-401b-40c1-ac0e-8315e6e4c772",
+      "name": "Check Instagram Media Status",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "jolW6j9xRq2tkWgX",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2300,
+        620
+      ],
+      "id": "4279fc71-2d92-4a44-bebc-73f20e31728c",
+      "name": "Wait Before Rechecking Instagram Status",
+      "webhookId": "edf328d9-cadd-4beb-9aa6-026a79a55177"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "571fd063-c591-48e6-aab9-be456e4c5480",
+              "leftValue": "={{ $json.status_code }}",
+              "rightValue": "FINISHED",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2520,
+        620
+      ],
+      "id": "62b0ebe9-622a-45bf-ba44-09a42ac061e8",
+      "name": "Check If Instagram Upload is Ready"
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v22.0",
+        "node": "=17841475437970159",
+        "edge": "media_publish",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "creation_id",
+                "value": "={{ $json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "35a62164-2a77-4d02-a861-a5214dfac501",
+      "name": "Publish Instagram Reel",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        3060,
+        800
+      ],
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "jolW6j9xRq2tkWgX",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "701d41ac-dc43-416d-9a1d-be03591fbb9a",
+              "name": "caption",
+              "value": "={{ $('Generate AI Image URL (Pollinations)\t').item.json.caption }} {{ $('Generate AI Image URL (Pollinations)\t').item.json.hashtags }}",
+              "type": "string"
+            },
+            {
+              "id": "8bee7a7e-bcd2-433c-86d4-054b5544610c",
+              "name": "media_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "71029d70-e572-41f5-8a25-f9fb2e1b0175",
+              "name": "quote",
+              "value": "={{ $('Fetch Random Anime Quote\t').item.json.data.content }}",
+              "type": "string"
+            },
+            {
+              "id": "7aab9814-48cf-4425-9ed2-b84a0aec1efd",
+              "name": "author",
+              "value": "={{ $('Fetch Random Anime Quote\t').item.json.data.character.name }} ({{ $('Fetch Random Anime Quote\t').item.json.data.anime.name }})",
+              "type": "string"
+            },
+            {
+              "id": "bdca222f-8d84-41a3-9798-21aa96531d74",
+              "name": "image_prompt",
+              "value": "={{ $('Generate AI Image URL (Pollinations)\t').item.json.image_prompt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3340,
+        200
+      ],
+      "id": "0202bc9c-7953-45b6-8cd8-684a7570035a",
+      "name": "Prepare Final Output Data"
+    }
+  ],
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Caption, Hashtags & Prompt (LLM)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger (Twice Daily)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Random Anime Quote\t",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Random Anime Quote\t": {
+      "main": [
+        [
+          {
+            "node": "Generate Caption, Hashtags & Prompt (LLM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Caption, Hashtags & Prompt (LLM)": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM JSON Output\t",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM JSON Output\t": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Image URL (Pollinations)\t",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Image URL (Pollinations)\t": {
+      "main": [
+        [
+          {
+            "node": "Upload AI Image to Tmpfiles\t",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload AI Image to Tmpfiles\t": {
+      "main": [
+        [
+          {
+            "node": "Format Tmpfiles Direct URL\t",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Tmpfiles Direct URL\t": {
+      "main": [
+        [
+          {
+            "node": "Render Final Quote Image (HTMLCSS2Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Final Quote Image (HTMLCSS2Image)": {
+      "main": [
+        [
+          {
+            "node": "Send Image to Shotstack for Video Render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Image to Shotstack for Video Render": {
+      "main": [
+        [
+          {
+            "node": "Check Shotstack Render Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Shotstack Render Status": {
+      "main": [
+        [
+          {
+            "node": "Check If Render Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Render Completed": {
+      "main": [
+        [
+          {
+            "node": "Create Instagram Media Container",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Download Rendered Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait Before Checking Render Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Checking Render Status": {
+      "main": [
+        [
+          {
+            "node": "Check Shotstack Render Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Rendered Video": {
+      "main": [
+        [
+          {
+            "node": "Upload Video to YouTube Shorts\t",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Instagram Media Container": {
+      "main": [
+        [
+          {
+            "node": "Wait for Media Container to be Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Media Container to be Ready": {
+      "main": [
+        [
+          {
+            "node": "Check Instagram Media Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Instagram Media Status": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Rechecking Instagram Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Rechecking Instagram Status": {
+      "main": [
+        [
+          {
+            "node": "Check If Instagram Upload is Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Instagram Upload is Ready": {
+      "main": [
+        [
+          {
+            "node": "Publish Instagram Reel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Instagram Media Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Instagram Reel": {
+      "main": [
+        [
+          {
+            "node": "Prepare Final Output Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    },
+    "node:Trigger (Twice Daily)": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "cab7860d-0bbe-47c9-94f8-f3b481a1dde2",
+  "triggerCount": 1,
+  "tags": [
+    {
+      "createdAt": "2025-06-20T17:08:57.674Z",
+      "updatedAt": "2025-06-20T17:08:57.674Z",
+      "id": "CPAmpiWUO8B0WuTw",
+      "name": "sparkz"
+    }
+  ]
+}
