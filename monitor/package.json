@@ -1,0 +1,9 @@
+{
+  "name": "n8n-monitor",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "node-fetch": "^3.4.1",
+    "node-telegram-bot-api": "^0.61.0"
+  }
+}
