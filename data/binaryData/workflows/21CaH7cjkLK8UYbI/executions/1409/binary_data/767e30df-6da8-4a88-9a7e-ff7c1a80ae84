@@ -1,0 +1,96 @@
+{
+  "createdAt": "2025-06-21T10:26:29.413Z",
+  "updatedAt": "2025-06-21T10:44:06.000Z",
+  "id": "GPT1EBRQhAAZIRLJ",
+  "name": "Render Service Heartbeat",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        -60
+      ],
+      "id": "747cdc80-8a05-46fe-83fc-7a0c5bdc0af7",
+      "name": "Heartbeat Scheduler (Every 12 min)"
+    },
+    {
+      "parameters": {
+        "url": "https://n8n-utility.onrender.com/health",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        0
+      ],
+      "id": "04bfbe00-77c6-403c-bb76-68f9465d3d86",
+      "name": "Ping Render Healthcheck",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "9H5Rrr12djcNArKD",
+          "name": "N8N Utility Auth account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Heartbeat Scheduler (Every 12 min)": {
+      "main": [
+        [
+          {
+            "node": "Ping Render Healthcheck",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ping Render Healthcheck": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Heartbeat Scheduler (Every 12 min)": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "c926ea60-5ed7-420a-800d-c8eaeeddcbd0",
+  "triggerCount": 1,
+  "tags": [
+    {
+      "createdAt": "2025-06-20T17:08:57.674Z",
+      "updatedAt": "2025-06-20T17:08:57.674Z",
+      "id": "CPAmpiWUO8B0WuTw",
+      "name": "sparkz"
+    }
+  ]
+}
